@@ -30,9 +30,9 @@ class Card(ui.element):
     def __init__(self, click, num: int):
         """表と裏のdivタグを作成"""
         super().__init__("div")
-        self.num = num
         suit = num // 13
         rank = num % 13 + 1
+        self.rank = rank
         char = chr(CARD_CODE + suit * 16 + rank + (rank > 11))  # noqa: PLR2004
         color = "black" if suit in {Suit.Spade, Suit.Club} else "red-10"
         with self.classes("card").on("click", lambda: click(self)):
@@ -52,13 +52,18 @@ class Card(ui.element):
 class Game(ui.element):
     """ゲーム"""
 
-    size: tuple[int, int] = 3, 4
+    sizes: tuple[int, int] = 3, 4
     player: Literal[0, 1]
     points: list[int]
     message: str
     message_ui: elements.label
     opened: Card | None
     in_click: bool
+
+    @property
+    def size(self):
+        """総枚数"""
+        return prod(self.sizes)
 
     def start(self, dialog):
         """新規ゲーム"""
@@ -79,18 +84,18 @@ class Game(ui.element):
 
     def build(self, dialog):
         """GUI作成"""
-        nums = [*range(52)]
+        nums = [*range(26)]
         random.shuffle(nums)
-        nums = nums[: prod(self.size) // 2]
-        nums *= 2
+        nums = nums[: self.size // 2]
+        nums += [i + 26 for i in nums]
         random.shuffle(nums)
         self.clear()
         with self:
             self.message_ui = ui.label().bind_text(self, "message").classes("text-2xl")
             with ui.column():
-                for _ in range(self.size[0]):
+                for _ in range(self.sizes[0]):
                     with ui.row():
-                        for _ in range(self.size[1]):
+                        for _ in range(self.sizes[1]):
                             Card(self.click, nums.pop())
             if dialog is not None:
                 with ui.row().classes("m-4"):
@@ -104,7 +109,7 @@ class Game(ui.element):
         card.flip()
         if self.opened is None:
             self.opened = card
-        elif card.num != self.opened.num:  # ハズレ
+        elif card.rank != self.opened.rank:  # ハズレ
             await asyncio.sleep(1)
             self.opened.flip()
             card.flip()
@@ -120,7 +125,7 @@ class Game(ui.element):
 
     def judge(self):
         """判定してメッセージ設定"""
-        if sum(self.points) == prod(self.size):
+        if sum(self.points) == self.size:
             self.message_ui.classes(remove="text-green-10 text-orange-10")
             if self.points[0] > self.points[1]:
                 self.message = "Player 1 won."
@@ -169,7 +174,7 @@ def main(*, reload=False, port=8104):
         ui.label("New Game").classes("text-2xl")
         with ui.row():
             ui.label("Size")
-            ui.select({(3, 4): "3 x 4", (4, 5): "4 x 5", (5, 8): "5 x 8"}).bind_value(game, "size")
+            ui.select({(3, 4): "3 x 4", (4, 5): "4 x 5", (5, 8): "5 x 8"}).bind_value(game, "sizes")
         ui.button("Start", on_click=lambda: game.start(dialog))
     game.start(dialog)
     ui.run(title="Memory", reload=reload, port=port)
