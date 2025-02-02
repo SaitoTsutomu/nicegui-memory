@@ -130,7 +130,7 @@ class Game(ui.element):
                 self.message = "Draw."
 
 
-def main():
+def main(*, reload=False, port=8104):
     """ゲーム実行"""
     ui.add_css("""
     .card {
@@ -172,8 +172,4 @@ def main():
             ui.select({(3, 4): "3 x 4", (4, 5): "4 x 5", (5, 8): "5 x 8"}).bind_value(game, "size")
         ui.button("Start", on_click=lambda: game.start(dialog))
     game.start(dialog)
-    ui.run()
-
-
-if __name__ in {"__main__", "__mp_main__"}:
-    main()
+    ui.run(title="Memory", reload=reload, port=port)

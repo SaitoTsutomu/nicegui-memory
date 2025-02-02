@@ -14,10 +14,13 @@ description = "Memory game on NiceGUI"
 name = "nicegui-memory"
 readme = "README.md"
 requires-python = ">=3.12"
-version = "0.1.0"
+version = "0.1.1"
 
 [project.urls]
 homepage = "https://github.com/SaitoTsutomu/nicegui-memory"
+
+[project.scripts]
+memory = "nicegui_memory:main"
 
 [tool.uv]
 dev-dependencies = ["pytest>=8.3.4"]
