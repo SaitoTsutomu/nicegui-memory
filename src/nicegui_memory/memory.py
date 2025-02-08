@@ -90,7 +90,7 @@ class Game(ui.element):
         nums += [i + 26 for i in nums]
         random.shuffle(nums)
         self.clear()
-        with self:
+        with self.classes("no-select"):
             self.message_ui = ui.label().bind_text(self, "message").classes("text-2xl")
             with ui.column():
                 for _ in range(self.sizes[0]):
@@ -166,6 +166,10 @@ def main(*, reload=False, port=8104):
 
     .card.flipped .back {
         transform: rotateY(0);
+    }
+
+    .no-select {
+        user-select: none;
     }
     """)
 
