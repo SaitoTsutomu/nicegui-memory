@@ -7,7 +7,7 @@ from unittest.mock import patch
 from nicegui_memory import Game
 
 
-def test_game_build():
+def test_game_build() -> None:
     """game.build()で、Cardがペアで作成されることをテスト"""
     game = Game()
     game.sizes = 3, 4  # 3行4列のカード

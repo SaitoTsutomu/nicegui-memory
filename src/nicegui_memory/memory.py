@@ -2,9 +2,10 @@
 
 import asyncio
 import random
+from collections.abc import Callable
 from enum import IntEnum
 from math import prod
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 from nicegui import elements, ui
 
@@ -27,7 +28,7 @@ type Rank = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 class Card(ui.element):
     """カード"""
 
-    def __init__(self, click, num: int):
+    def __init__(self, click: Callable, num: int) -> None:
         """表と裏のdivタグを作成"""
         super().__init__("div")
         suit = num // 13
@@ -39,12 +40,12 @@ class Card(ui.element):
             ui.label(chr(CARD_CODE)).classes("face front text-blue-10")
             ui.label(char).classes(f"face back text-{color}")
 
-    def flip(self):
+    def flip(self) -> None:
         """カードをひっくり返す"""
         self.classes(toggle="flipped")
 
     @property
-    def flipped(self):
+    def flipped(self) -> bool:
         """表かどうか"""
         return "flipped" in self.classes
 
@@ -59,13 +60,49 @@ class Game(ui.element):
     message_ui: elements.label
     opened: Card | None
     in_click: bool
+    wait: float
+
+    def __init__(self, *, wait: float = 0.6) -> None:
+        """CSSの設定"""
+        super().__init__()
+        self.wait = wait
+        ui.add_css(f"""
+            .card {{
+                width: 68px;
+                height: 112px;
+                perspective: 1000px;
+            }}
+            .face {{
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 8em;
+                backface-visibility: hidden;
+                transition: transform {self.wait}s;
+            }}
+            .back {{
+                transform: rotateY(180deg);
+            }}
+            .card.flipped .front {{
+                transform: rotateY(180deg);
+            }}
+            .card.flipped .back {{
+                transform: rotateY(0);
+            }}
+            .no-select {{
+                user-select: none;
+            }}
+        """)
 
     @property
-    def size(self):
+    def size(self) -> int:
         """総枚数"""
         return prod(self.sizes)
 
-    def start(self, dialog):
+    def start(self, dialog: elements.dialog.Dialog) -> None:
         """新規ゲーム"""
         self.player = 1
         self.points = [0, 0]
@@ -74,15 +111,15 @@ class Game(ui.element):
         self.in_click = False
         dialog.close()
 
-    def turn(self):
+    def turn(self) -> None:
         """手番交代"""
-        self.player = 1 - self.player
+        self.player = cast("Literal[0, 1]", 1 - self.player)
         self.message = f"Player {self.player + 1}'s turn"
         color = ["text-green-10", "text-orange-10"][self.player]
         self.message_ui.classes(color, remove="text-green-10 text-orange-10")
         self.opened = None
 
-    def build(self, dialog):
+    def build(self, dialog: elements.dialog.Dialog) -> None:
         """GUI作成"""
         nums = [*range(26)]
         random.shuffle(nums)
@@ -101,7 +138,7 @@ class Game(ui.element):
                 with ui.row().classes("m-4"):
                     ui.button("New Game", on_click=dialog.open)
 
-    async def click(self, card: Card):
+    async def click(self, card: Card) -> None:
         """クリック時の処理"""
         if card.flipped or self.in_click:
             return
@@ -123,7 +160,7 @@ class Game(ui.element):
             self.judge()
         self.in_click = False
 
-    def judge(self):
+    def judge(self) -> None:
         """判定してメッセージ設定"""
         if sum(self.points) == self.size:
             self.message_ui.classes(remove="text-green-10 text-orange-10")
@@ -135,44 +172,8 @@ class Game(ui.element):
                 self.message = "Draw."
 
 
-def main(*, reload=False, port=8104):
+def main(*, reload: bool = False, port: int = 8104) -> None:
     """ゲーム実行"""
-    ui.add_css("""
-    .card {
-        width: 68px;
-        height: 112px;
-        perspective: 1000px;
-    }
-
-    .face {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 8em;
-        backface-visibility: hidden;
-        transition: transform 0.6s;
-    }
-
-    .back {
-        transform: rotateY(180deg);
-    }
-
-    .card.flipped .front {
-        transform: rotateY(180deg);
-    }
-
-    .card.flipped .back {
-        transform: rotateY(0);
-    }
-
-    .no-select {
-        user-select: none;
-    }
-    """)
-
     game = Game()
     with ui.dialog() as dialog, ui.card():  # 新規ゲームのダイアログ
         ui.label("New Game").classes("text-2xl")
