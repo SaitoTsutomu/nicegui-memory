@@ -42,12 +42,12 @@ class Card(ui.element):
 
     def flip(self) -> None:
         """カードをひっくり返す"""
-        self.classes(toggle="flipped")
+        self.classes(toggle="opened")
 
     @property
-    def flipped(self) -> bool:
+    def opened(self) -> bool:
         """表かどうか"""
-        return "flipped" in self.classes
+        return "opened" in self.classes
 
 
 class Game(ui.element):
@@ -86,10 +86,10 @@ class Game(ui.element):
             .back {{
                 transform: rotateY(180deg);
             }}
-            .card.flipped .front {{
+            .card.opened .front {{
                 transform: rotateY(180deg);
             }}
-            .card.flipped .back {{
+            .card.opened .back {{
                 transform: rotateY(0);
             }}
             .no-select {{
@@ -140,7 +140,7 @@ class Game(ui.element):
 
     async def click(self, card: Card) -> None:
         """クリック時の処理"""
-        if card.flipped or self.in_click:
+        if card.opened or self.in_click:
             return
         self.in_click = True
         card.flip()
