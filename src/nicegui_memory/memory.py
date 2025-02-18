@@ -172,7 +172,7 @@ class Game(ui.element):
                 self.message = "Draw."
 
 
-def main(*, reload: bool = False, port: int = 8104) -> None:
+def run_game(*, port: int | None = None) -> None:
     """ゲーム実行"""
     game = Game()
     with ui.dialog() as dialog, ui.card():  # 新規ゲームのダイアログ
@@ -182,4 +182,4 @@ def main(*, reload: bool = False, port: int = 8104) -> None:
             ui.select({(3, 4): "3 x 4", (4, 5): "4 x 5", (5, 8): "5 x 8"}).bind_value(game, "sizes")
         ui.button("Start", on_click=lambda: game.start(dialog))
     game.start(dialog)
-    ui.run(title="Memory", reload=reload, port=port)
+    ui.run(title="Memory", reload=False, port=port)
