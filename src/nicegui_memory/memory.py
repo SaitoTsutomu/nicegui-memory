@@ -115,8 +115,8 @@ class Game(ui.element):
         """手番交代"""
         self.player = cast("Literal[0, 1]", 1 - self.player)
         self.message = f"Player {self.player + 1}'s turn"
-        color = ["text-green-10", "text-orange-10"][self.player]
-        self.message_ui.classes(color, remove="text-green-10 text-orange-10")
+        color = ["#006000", "#b06000"][self.player]
+        self.message_ui.style(f"color: {color}")
         self.opened = None
 
     def build(self, dialog: elements.dialog.Dialog) -> None:
@@ -163,7 +163,6 @@ class Game(ui.element):
     def judge(self) -> None:
         """判定してメッセージ設定"""
         if sum(self.points) == self.size:
-            self.message_ui.classes(remove="text-green-10 text-orange-10")
             if self.points[0] > self.points[1]:
                 self.message = "Player 1 won."
             elif self.points[0] < self.points[1]:
